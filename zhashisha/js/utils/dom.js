@@ -1,9 +1,8 @@
 /**
- * DOM操作工具类 - 修复重复提示和事件绑定问题
+ * DOM操作工具类 - 修复加载状态和提示问题
  */
 const DOM = {
-    prefix: 'zhashisha_',
-    
+    // 更新玩家列表
     updatePlayerList() {
         const playerListEl = document.getElementById('playerList');
         if (!playerListEl) return;
@@ -54,6 +53,7 @@ const DOM = {
         Game.addLog('玩家列表已更新');
     },
 
+    // 格式化装备
     formatEquipment(equipments) {
         const equipmentParts = [];
         if (equipments.weapon) equipmentParts.push(`武器：${equipments.weapon.name}`);
@@ -63,6 +63,7 @@ const DOM = {
         return equipmentParts.length > 0 ? equipmentParts.join('，') : '无';
     },
 
+    // 更新手牌
     updateHandCards(player = Game.getSelfPlayer()) {
         if (!player || !player.isSelf) return;
         
@@ -93,6 +94,7 @@ const DOM = {
         Game.addLog(`手牌已更新，当前手牌数：${player.handCards.length}`);
     },
 
+    // 更新回合
     updatePlayerTurn(player) {
         document.querySelectorAll('.player-card').forEach(card => {
             card.classList.remove('current-turn');
@@ -118,13 +120,16 @@ const DOM = {
             drawCardBtn.disabled = true;
             endTurnBtn.disabled = true;
             
-            // 修复：AI自动出牌逻辑
+            // AI自动出牌
             setTimeout(() => {
-                Game.aiPlayTurn(player);
+                if (Game.aiPlayTurn) {
+                    Game.aiPlayTurn(player);
+                }
             }, 1500);
         }
     },
 
+    // 添加游戏日志
     addGameLog(logContent) {
         const gameLog = document.getElementById('gameLog');
         if (!gameLog) return;
@@ -137,6 +142,7 @@ const DOM = {
         gameLog.scrollTop = gameLog.scrollHeight;
     },
 
+    // 清空日志
     clearGameLog() {
         const gameLog = document.getElementById('gameLog');
         if (gameLog) gameLog.innerHTML = '';
@@ -144,6 +150,7 @@ const DOM = {
         Game.addLog('游戏日志已清空');
     },
 
+    // 显示游戏结果
     showGameResult(winner) {
         let resultModal = document.getElementById('gameResultModal');
         if (!resultModal) {
@@ -194,36 +201,56 @@ const DOM = {
         Game.addLog(`游戏结果：${winner ? winner.name + '获胜' : '无胜利者'}`);
     },
 
+    // 显示加载（修复一直显示的问题）
     showLoading(message = '加载中...') {
-        let loadingOverlay = document.getElementById('loadingOverlay');
-        if (!loadingOverlay) {
-            loadingOverlay = document.createElement('div');
-            loadingOverlay.id = 'loadingOverlay';
-            loadingOverlay.className = 'loading-overlay';
-            
-            loadingOverlay.innerHTML = `
-                <div class="loading-content">
-                    <div class="loading-spinner"></div>
-                    <p id="loadingMessage">${message}</p>
-                </div>
-            `;
-            
-            document.body.appendChild(loadingOverlay);
-        } else {
-            document.getElementById('loadingMessage').textContent = message;
-        }
+        // 先移除旧的加载层
+        this.hideLoading();
         
+        let loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.style.position = 'fixed';
+        loadingOverlay.style.top = '0';
+        loadingOverlay.style.left = '0';
+        loadingOverlay.style.width = '100%';
+        loadingOverlay.style.height = '100%';
+        loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
         loadingOverlay.style.display = 'flex';
+        loadingOverlay.style.justifyContent = 'center';
+        loadingOverlay.style.alignItems = 'center';
+        loadingOverlay.style.zIndex = '9999';
+        
+        loadingOverlay.innerHTML = `
+            <div class="loading-content" style="background: white; padding: 20px; border-radius: 8px;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p id="loadingMessage" style="margin-top: 20px;">${message}</p>
+            </div>
+            <style>
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+        `;
+        
+        document.body.appendChild(loadingOverlay);
     },
 
+    // 隐藏加载（核心修复）
     hideLoading() {
         const loadingOverlay = document.getElementById('loadingOverlay');
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        if (loadingOverlay) {
+            loadingOverlay.remove(); // 彻底移除，不是隐藏
+        }
+        
+        // 清除所有定时器
+        if (window.loadingTimer) {
+            clearTimeout(window.loadingTimer);
+        }
+        
+        console.log('加载状态已隐藏');
     },
 
-    // 修复：防止重复显示提示
+    // 显示提示
     showToast(message, type = 'info', duration = 3000) {
-        // 先移除旧的提示框
+        // 先移除旧的提示
         const oldToast = document.getElementById('toastNotification');
         if (oldToast) oldToast.remove();
         
@@ -231,36 +258,53 @@ const DOM = {
         toast.id = 'toastNotification';
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.right = '20px';
+        toast.style.padding = '10px 20px';
+        toast.style.borderRadius = '4px';
+        toast.style.color = 'white';
+        toast.style.zIndex = '9998';
+        
+        // 设置提示类型样式
+        if (type === 'success') toast.style.backgroundColor = '#2ecc71';
+        else if (type === 'error') toast.style.backgroundColor = '#e74c3c';
+        else if (type === 'warning') toast.style.backgroundColor = '#f39c12';
+        else toast.style.backgroundColor = '#3498db';
+        
         document.body.appendChild(toast);
         
         toast.style.display = 'block';
         
         if (duration > 0) {
-            setTimeout(() => {
-                toast.style.display = 'none';
+            window.loadingTimer = setTimeout(() => {
+                toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 500);
             }, duration);
         }
         
         toast.addEventListener('click', () => {
-            toast.style.display = 'none';
-            setTimeout(() => toast.remove(), 500);
+            toast.remove();
         });
     },
 
+    // 切换页面
     switchPage(pageId) {
         document.querySelectorAll('.page').forEach(page => {
+            page.style.display = 'none';
             page.classList.remove('active');
         });
         
         const targetPage = document.getElementById(pageId);
         if (targetPage) {
+            targetPage.style.display = 'block';
             targetPage.classList.add('active');
         }
         
         Game.addLog(`切换到页面：${pageId}`);
     },
 
+    // 初始化事件
     initEvents() {
         // 练习模式按钮
         const practiceModeBtn = document.getElementById('practiceModeBtn');
@@ -270,23 +314,31 @@ const DOM = {
             });
         }
         
-        // 创建房间按钮 - 修复重复提示问题
+        // 创建房间按钮 - 彻底修复
         const createRoomBtn = document.getElementById('createRoomBtn');
         if (createRoomBtn) {
             createRoomBtn.addEventListener('click', () => {
+                // 立即显示加载
                 this.showLoading('创建房间中...');
                 
-                setTimeout(() => {
-                    const roomId = randomUtil.generateRoomId();
-                    // 直接初始化联机模式，避免重复调用
-                    OnlineMode.init(roomId, true);
-                    this.hideLoading();
-                    this.showToast(`房间创建成功，ID：${roomId}`, 'success');
-                }, 500);
+                // 延迟执行，避免UI阻塞
+                window.loadingTimer = setTimeout(() => {
+                    try {
+                        const roomId = randomUtil.generateRoomId();
+                        // 直接初始化，不重复调用
+                        OnlineMode.init(roomId, true);
+                        this.hideLoading(); // 立即隐藏加载
+                        this.showToast(`房间创建成功，ID：${roomId}`, 'success');
+                    } catch (e) {
+                        console.error('创建房间失败：', e);
+                        this.hideLoading();
+                        this.showToast('创建房间失败', 'error');
+                    }
+                }, 800);
             });
         }
         
-        // 加入房间按钮 - 修复空白页面问题
+        // 加入房间按钮
         const joinRoomBtn = document.getElementById('joinRoomBtn');
         if (joinRoomBtn) {
             joinRoomBtn.addEventListener('click', () => {
@@ -305,11 +357,17 @@ const DOM = {
                 
                 this.showLoading('加入房间中...');
                 
-                setTimeout(() => {
-                    OnlineMode.init(roomId, false);
-                    this.hideLoading();
-                    roomIdInput.value = '';
-                }, 500);
+                window.loadingTimer = setTimeout(() => {
+                    try {
+                        OnlineMode.init(roomId, false);
+                        this.hideLoading();
+                        roomIdInput.value = '';
+                    } catch (e) {
+                        console.error('加入房间失败：', e);
+                        this.hideLoading();
+                        this.showToast('加入房间失败', 'error');
+                    }
+                }, 800);
             });
         }
         
@@ -336,9 +394,13 @@ const DOM = {
     }
 };
 
+// 页面加载完成初始化
 window.addEventListener('DOMContentLoaded', () => {
     DOM.initEvents();
     Game.addLog('DOM工具类初始化完成');
+    
+    // 初始隐藏所有加载状态
+    DOM.hideLoading();
 });
 
 window.DOM = DOM;
