@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诈尸杀 - 学习币版三国杀</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- WebRTC联机依赖 -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- 游戏核心脚本 -->
+    <script src="js/cards.js"></script>
+    <script src="js/characters.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/webrtc-online.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题区域 -->
+        <header class="header">
+            <h1>诈尸杀 - 学习币版三国杀</h1>
+            <div id="game-log" class="game-log"></div>
+        </header>
+
+        <!-- 模式选择面板 -->
+        <div id="mode-panel" class="panel">
+            <h2>选择游戏模式</h2>
+            <button id="offline-mode-btn" class="mode-btn">人机对战</button>
+            <button id="online-mode-btn" class="mode-btn">联机对战</button>
+        </div>
+
+        <!-- 人机模式面板 -->
+        <div id="offline-panel" class="panel hidden">
+            <h2>人机对战设置</h2>
+            <div class="form-group">
+                <label>你的昵称：</label>
+                <input type="text" id="ai-player-name" placeholder="输入你的名字" value="玩家1">
+            </div>
+            <div class="form-group">
+                <label>AI数量：</label>
+                <select id="ai-count">
+                    <option value="1">1个AI</option>
+                    <option value="2" selected>2个AI</option>
+                    <option value="3">3个AI</option>
+                </select>
+            </div>
+            <button id="start-offline-game-btn" class="start-btn">开始游戏</button>
+            <button onclick="backToMode()" class="back-btn">返回</button>
+        </div>
+
+        <!-- 联机模式面板 -->
+        <div id="online-panel" class="panel hidden">
+            <h2>联机对战设置</h2>
+            <div class="form-group">
+                <label>你的昵称：</label>
+                <input type="text" id="player-name" placeholder="输入你的名字" value="玩家1">
+            </div>
+            <div class="room-controls">
+                <button id="create-room-btn" class="room-btn">创建房间</button>
+                <div class="join-room">
+                    <input type="text" id="room-id" placeholder="输入房间号">
+                    <button id="join-room-btn" class="room-btn">加入房间</button>
+                </div>
+            </div>
+            <div id="room-info" class="room-info hidden">
+                <p>房间号：<span id="current-room-id">----</span></p>
+                <p>当前人数：<span id="player-count">0</span>/4</p>
+                <div id="players-list" class="players-list"></div>
+                <button id="start-online-game-btn" class="start-btn" disabled>开始游戏</button>
+            </div>
+            <button onclick="backToMode()" class="back-btn">返回</button>
+        </div>
+
+        <!-- 游戏面板 -->
+        <div id="game-panel" class="panel hidden">
+            <h2 id="game-mode-title">游戏进行中</h2>
+            <div class="game-status">
+                <p>当前回合：<span id="current-turn">无</span></p>
+                <p>牌堆剩余：<span id="deck-count">0</span>张</p>
+            </div>
+
+            <!-- 对手区域 -->
+            <div class="opponents">
+                <div id="opponent-1" class="opponent hidden"></div>
+                <div id="opponent-2" class="opponent hidden"></div>
+                <div id="opponent-3" class="opponent hidden"></div>
+            </div>
+
+            <!-- 自己区域 -->
+            <div class="self-player" id="self-player">
+                <h3 id="self-name">玩家 (武将)</h3>
+                <p id="self-health">学习币：4</p>
+                <div id="equipment-area" class="equipment-area">装备区：</div>
+            </div>
+
+            <!-- 出牌区 -->
+            <div class="play-area" id="play-area">出牌区：</div>
+
+            <!-- 手牌区 -->
+            <div class="hand-cards" id="hand-cards">手牌区：</div>
+
+            <!-- 游戏控制 -->
+            <div class="game-controls">
+                <button id="draw-card-btn" class="game-btn">摸牌</button>
+                <button id="use-card-btn" class="game-btn">出牌</button>
+                <button id="end-turn-btn" class="game-btn">结束回合</button>
+                <button id="back-to-menu-btn" class="back-btn">返回菜单</button>
+            </div>
+        </div>
+
+        <!-- 武将选择模态框 -->
+        <div id="character-select-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('character-select-modal')">&times;</span>
+                <h3>选择你的武将</h3>
+                <div id="character-list" class="character-list"></div>
+                <button id="confirm-character-btn" class="confirm-btn">确认选择</button>
+            </div>
+        </div>
+
+        <!-- 目标选择模态框 -->
+        <div id="target-select-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('target-select-modal')">&times;</span>
+                <h3>选择目标</h3>
+                <div id="target-list" class="target-list"></div>
+                <button id="confirm-target-btn" class="confirm-btn">确认</button>
+            </div>
+        </div>
+
+        <!-- 卡牌信息模态框 -->
+        <div id="card-info-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal('card-info-modal')">&times;</span>
+                <h3>卡牌说明</h3>
+                <div id="card-info-content" class="card-info-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 通用模态框控制
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function backToMode() {
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById('mode-panel').classList.remove('hidden');
+        }
+
+        // 游戏日志
+        function addGameLog(message) {
+            const logElement = document.getElementById('game-log');
+            const time = new Date().toLocaleTimeString();
+            logElement.innerHTML += `<div>[${time}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // 创建卡牌元素
+        function createCardElement(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.color}`;
+            cardElement.innerHTML = card.name;
+            cardElement.title = `${card.name} - ${card.type === 'basic' ? '基本牌' : card.type === 'jinang' ? '锦囊牌' : '装备牌'}`;
+            return cardElement;
+        }
+    </script>
+</body>
+</html>
