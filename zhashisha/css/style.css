@@ -1,380 +1,281 @@
-/* 全局样式 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Microsoft YaHei", Arial, sans-serif;
+    font-family: "Microsoft YaHei", sans-serif;
 }
 
 body {
-    background-color: #f5f7fa;
-    color: #333;
-    line-height: 1.6;
+    background-color: #f5f5f5;
     padding: 20px;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    padding: 20px;
 }
 
-header {
+/* 页面切换 */
+.page {
+    display: none;
+}
+.page.active {
+    display: block;
+}
+
+/* 模式选择页 */
+#modePage h1 {
     text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    color: #333;
+    margin: 50px 0;
+    font-size: 36px;
 }
 
-header h1 {
-    color: #e74c3c;
-    margin-bottom: 10px;
-}
-
-/* 面板样式 */
-.panel {
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.panel h2 {
-    color: #2c3e50;
-    margin-bottom: 20px;
+.mode-buttons {
     text-align: center;
 }
 
-.hidden {
-    display: none !important;
-}
-
-/* 表单样式 */
-.form-group {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.form-group label {
-    font-weight: bold;
-    color: #555;
-}
-
-.form-group input, .form-group select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-/* 按钮样式 */
-.btn-group {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 20px;
-}
-
-.btn {
-    padding: 12px 24px;
+.mode-buttons button {
+    padding: 15px 30px;
+    font-size: 18px;
+    margin: 10px;
+    background-color: #4CAF50;
+    color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.join-room {
+    margin-top: 20px;
+}
+
+.join-room input {
+    padding: 10px;
     font-size: 16px;
-    transition: all 0.3s ease;
+    width: 200px;
+    margin-right: 10px;
 }
 
-.btn.primary {
-    background-color: #3498db;
-    color: white;
+/* 武将选择页 */
+#heroSelectPage h2 {
+    text-align: center;
+    margin: 30px 0;
+    color: #333;
 }
 
-.btn.primary:hover {
-    background-color: #2980b9;
+.hero-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
-.btn.secondary {
-    background-color: #95a5a6;
-    color: white;
+.hero-item {
+    background: white;
+    padding: 15px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s;
 }
 
-.btn.secondary:hover {
-    background-color: #7f8c8d;
+.hero-item:hover {
+    border-color: #4CAF50;
 }
 
-.btn.danger {
-    background-color: #e74c3c;
-    color: white;
+.hero-item h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+    color: #2c3e50;
 }
 
-.btn.danger:hover {
-    background-color: #c0392b;
+.hero-item .title {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-bottom: 10px;
 }
 
-.btn.game-btn {
-    background-color: #2ecc71;
-    color: white;
-    margin: 5px;
+.hero-item .hp {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-.btn.game-btn:hover {
-    background-color: #27ae60;
+.hero-item .skill {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #34495e;
+    margin-bottom: 3px;
 }
 
-/* 游戏界面样式 */
-.game-header {
+/* 游戏主页面 */
+.player-info {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.players-area {
-    margin-bottom: 20px;
-}
-
-.players-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.player-card {
-    background: #f8f9fa;
-    border: 2px solid #ddd;
+    background: white;
+    padding: 20px;
     border-radius: 8px;
-    padding: 15px;
-    width: 180px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.self-player {
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+.self-player span {
+    font-weight: bold;
+}
+
+.enemy-players {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.enemy-player {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 5px;
+    min-width: 120px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.enemy-player h4 {
+    font-size: 16px;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.enemy-player .hp {
+    color: #e74c3c;
+    font-size: 14px;
+}
+
+.hand-cards {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hand-cards h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.card-item {
+    background: white;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    padding: 12px;
     text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
-.player-card.current {
-    border-color: #e74c3c;
-    background: #fff5f5;
-}
-
-.player-card.dead {
-    opacity: 0.5;
+.card-item:hover {
     background: #f1f1f1;
 }
 
-.player-card h4 {
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.player-card .health {
-    color: #e74c3c;
+.card-item .name {
     font-weight: bold;
-    margin: 5px 0;
-}
-
-.player-card .character {
-    font-size: 14px;
-    color: #777;
-}
-
-/* 卡牌样式 */
-.cards-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 15px 0;
-    min-height: 100px;
-    padding: 10px;
-    border: 1px dashed #ddd;
-    border-radius: 5px;
-}
-
-.card {
-    width: 80px;
-    height: 110px;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    text-align: center;
-    padding: 5px;
-    font-size: 12px;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card.red {
-    background-color: #e74c3c;
-}
-
-.card.black {
-    background-color: #34495e;
-}
-
-.card.selected {
-    border: 3px solid #f1c40f;
-}
-
-/* 武将选择样式 */
-.character-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    max-height: 400px;
-    overflow-y: auto;
-    margin: 20px 0;
-}
-
-.character-item {
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 10px;
-    width: 220px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.character-item:hover {
-    background: #e8f4fd;
-    border-color: #3498db;
-}
-
-.character-item.selected {
-    border: 2px solid #3498db;
-    background: #e8f4fd;
-}
-
-.character-item strong {
     color: #2c3e50;
-    font-size: 16px;
-}
-
-.character-item small {
-    color: #777;
-}
-
-.character-item p {
-    margin: 5px 0;
-    font-size: 12px;
-    color: #555;
-}
-
-/* 目标选择样式 */
-.target-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 20px 0;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.target-item {
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    width: 200px;
-    cursor: pointer;
-}
-
-.target-item:hover {
-    background: #e8f4fd;
-}
-
-.target-item.selected {
-    background: #3498db;
-    color: white;
-    border-color: #2980b9;
-}
-
-.target-item.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* 模态框样式 */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 10px;
-    padding: 30px;
-    max-width: 800px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.close-btn {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #777;
-}
-
-.close-btn:hover {
-    color: #e74c3c;
-}
-
-/* 游戏日志样式 */
-.game-log {
-    margin-top: 20px;
-    height: 200px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    overflow-y: auto;
-    background: #f9f9f9;
-    font-size: 14px;
-}
-
-.log-item {
     margin-bottom: 5px;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed #eee;
+}
+
+.card-item .desc {
+    font-size: 12px;
+    color: #7f8c8d;
+    line-height: 1.3;
+}
+
+.action-area {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-area button {
+    padding: 10px 20px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-area button:hover {
+    background: #1976D2;
+}
+
+.action-area select {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #bdc3c7;
+    min-width: 180px;
+}
+
+.log-area {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.log-area h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.log-content {
+    height: 200px;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #34495e;
+}
+
+.log-content p {
+    margin-bottom: 5px;
 }
 
 /* 响应式适配 */
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
+    .hero-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    .players-list {
+    .player-info {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .enemy-players {
         justify-content: center;
-    }
-    
-    .player-card {
-        width: 140px;
-    }
-    
-    .btn {
-        padding: 10px 20px;
-        font-size: 14px;
     }
 }
