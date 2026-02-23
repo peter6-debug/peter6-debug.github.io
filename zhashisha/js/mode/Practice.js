@@ -1,5 +1,5 @@
 /**
- * 练习模式核心逻辑 - 修复选择武将后页面跳转问题
+ * 练习模式核心逻辑 - 彻底修复页面跳转和返回按钮问题
  */
 const PracticeMode = {
     config: {
@@ -8,33 +8,43 @@ const PracticeMode = {
         isStarted: false
     },
 
+    // 初始化练习模式
     init() {
         this.config.isStarted = false;
         
-        // 修复：确保所有页面初始状态正确
-        document.querySelectorAll('.page').forEach(page => {
+        // 强制重置所有页面状态
+        const allPages = document.querySelectorAll('.page');
+        allPages.forEach(page => {
+            page.style.display = 'none';
             page.classList.remove('active');
         });
         
+        // 确保基础DOM结构存在
+        this.ensureBaseDomExists();
+        
         // 显示武将选择页
         const heroSelectPage = document.getElementById('heroSelectPage');
-        if (heroSelectPage) {
-            heroSelectPage.classList.add('active');
-        } else {
-            // 修复：页面不存在时创建基础结构
-            this.createMissingPages();
-            document.getElementById('heroSelectPage').classList.add('active');
-        }
+        heroSelectPage.style.display = 'block';
+        heroSelectPage.classList.add('active');
         
+        // 清空并重新渲染武将列表
         const heroList = document.getElementById('heroList');
         heroList.innerHTML = '';
         
-        const randomHeroes = randomUtil.getRandomHeroes(this.config.heroSelectCount);
+        // 获取随机武将
+        const randomHeroes = typeof randomUtil !== 'undefined' ? 
+            randomUtil.getRandomHeroes(this.config.heroSelectCount) : 
+            HEROES.slice(0, 5);
         
+        // 渲染武将
         randomHeroes.forEach(hero => {
             const heroItem = document.createElement('div');
             heroItem.className = 'hero-item';
             heroItem.dataset.heroId = hero.id;
+            heroItem.style.cursor = 'pointer';
+            heroItem.style.padding = '10px';
+            heroItem.style.border = '1px solid #ccc';
+            heroItem.style.margin = '10px';
             
             heroItem.innerHTML = `
                 <h3>${hero.name}</h3>
@@ -43,16 +53,22 @@ const PracticeMode = {
                 ${hero.skills.map(skill => `<p class="skill">【${skill.name}】${skill.desc}</p>`).join('')}
             `;
             
+            // 绑定点击事件（使用addEventListener确保生效）
             heroItem.addEventListener('click', () => {
+                console.log('选择武将：', hero.id);
                 this.selectHero(hero.id);
             });
             
             heroList.appendChild(heroItem);
         });
         
+        // 重新绑定返回按钮事件
+        this.bindBackButton();
+        
         Game.addLog('练习模式 - 请选择你的武将开始游戏');
     },
 
+    // 选择武将并跳转游戏页面
     selectHero(heroId) {
         if (this.config.isStarted) return;
         
@@ -62,22 +78,24 @@ const PracticeMode = {
             return;
         }
         
-        Game.addLog(`你选择了武将：${selectedHero.name}（${selectedHero.title}）`);
+        console.log('选中武将，开始跳转游戏页面');
         
-        // 修复核心：强制切换页面并确保DOM元素存在
-        document.querySelectorAll('.page').forEach(page => {
+        // 1. 隐藏所有页面
+        const allPages = document.querySelectorAll('.page');
+        allPages.forEach(page => {
+            page.style.display = 'none';
             page.classList.remove('active');
         });
         
-        const gamePage = document.getElementById('gamePage');
-        if (gamePage) {
-            gamePage.classList.add('active');
-        } else {
-            this.createMissingPages();
-            document.getElementById('gamePage').classList.add('active');
-        }
+        // 2. 确保游戏页面存在
+        this.ensureGamePageExists();
         
-        // 构建玩家配置
+        // 3. 显示游戏页面
+        const gamePage = document.getElementById('gamePage');
+        gamePage.style.display = 'block';
+        gamePage.classList.add('active');
+        
+        // 4. 构建玩家配置
         const playerConfigs = [
             {
                 id: 'self_player',
@@ -89,7 +107,9 @@ const PracticeMode = {
         
         // 添加AI玩家
         for (let i = 0; i < this.config.aiCount; i++) {
-            const aiHeroes = randomUtil.getRandomHeroes(1, [heroId]);
+            const aiHeroes = typeof randomUtil !== 'undefined' ? 
+                randomUtil.getRandomHeroes(1, [heroId]) : 
+                HEROES.filter(h => h.id !== heroId).slice(0, 1);
             const aiHero = aiHeroes[0] || HEROES[0];
             
             playerConfigs.push({
@@ -100,32 +120,67 @@ const PracticeMode = {
             });
         }
         
-        // 初始化游戏
-        Game.init('practice', playerConfigs);
-        
-        // 修复：确保事件绑定只执行一次
-        if (!document.querySelector('#drawCardBtn').dataset.bound) {
-            this.bindGameEvents();
-            document.querySelector('#drawCardBtn').dataset.bound = 'true';
+        // 5. 初始化游戏
+        if (typeof Game !== 'undefined') {
+            Game.init('practice', playerConfigs);
+            
+            // 确保事件只绑定一次
+            if (!document.querySelector('#drawCardBtn').dataset.bound) {
+                this.bindGameEvents();
+                document.querySelector('#drawCardBtn').dataset.bound = 'true';
+            }
+            
+            // 6. 开始游戏
+            Game.start();
+            this.config.isStarted = true;
+            
+            // 7. 强制刷新UI
+            setTimeout(() => {
+                if (typeof DOM !== 'undefined') {
+                    DOM.updatePlayerList();
+                    DOM.updateHandCards(Game.getSelfPlayer());
+                }
+            }, 100);
         }
         
-        // 开始游戏
-        Game.start();
-        
-        this.config.isStarted = true;
-        
-        // 强制刷新UI
-        setTimeout(() => {
-            DOM.updatePlayerList();
-            DOM.updateHandCards(Game.getSelfPlayer());
-        }, 100);
+        Game.addLog(`你选择了武将：${selectedHero.name}（${selectedHero.title}）`);
     },
 
-    // 新增：创建缺失的页面结构（修复页面跳转空白问题）
-    createMissingPages() {
-        // 检查并创建游戏页面
-        if (!document.getElementById('gamePage')) {
-            const gamePage = document.createElement('div');
+    // 确保基础DOM结构存在
+    ensureBaseDomExists() {
+        // 检查容器
+        let container = document.querySelector('.container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'container';
+            document.body.appendChild(container);
+        }
+        
+        // 检查武将选择页
+        let heroSelectPage = document.getElementById('heroSelectPage');
+        if (!heroSelectPage) {
+            heroSelectPage = document.createElement('div');
+            heroSelectPage.id = 'heroSelectPage';
+            heroSelectPage.className = 'page';
+            heroSelectPage.innerHTML = `
+                <div class="hero-select-header">
+                    <h1>选择你的武将</h1>
+                    <button id="practiceBackBtn" class="btn btn-secondary">返回</button>
+                </div>
+                <div id="heroList" class="hero-grid"></div>
+            `;
+            container.appendChild(heroSelectPage);
+        }
+        
+        // 绑定返回按钮
+        this.bindBackButton();
+    },
+
+    // 确保游戏页面存在
+    ensureGamePageExists() {
+        let gamePage = document.getElementById('gamePage');
+        if (!gamePage) {
+            gamePage = document.createElement('div');
             gamePage.id = 'gamePage';
             gamePage.className = 'page';
             gamePage.innerHTML = `
@@ -152,7 +207,7 @@ const PracticeMode = {
                             </select>
                             <button id="drawCardBtn" class="btn">摸牌</button>
                             <button id="endTurnBtn" class="btn">结束回合</button>
-                            <button id="backBtn" class="btn btn-secondary">返回</button>
+                            <button id="gameBackBtn" class="btn btn-secondary">返回</button>
                         </div>
                     </div>
                     
@@ -165,22 +220,26 @@ const PracticeMode = {
             document.querySelector('.container').appendChild(gamePage);
         }
         
-        // 检查并创建武将选择页面
-        if (!document.getElementById('heroSelectPage')) {
-            const heroSelectPage = document.createElement('div');
-            heroSelectPage.id = 'heroSelectPage';
-            heroSelectPage.className = 'page';
-            heroSelectPage.innerHTML = `
-                <div class="hero-select-header">
-                    <h1>选择你的武将</h1>
-                    <button id="backBtn" class="btn btn-secondary">返回</button>
-                </div>
-                <div id="heroList" class="hero-grid"></div>
-            `;
-            document.querySelector('.container').appendChild(heroSelectPage);
+        // 绑定游戏页面返回按钮
+        document.getElementById('gameBackBtn').addEventListener('click', () => {
+            this.reset();
+        });
+    },
+
+    // 绑定返回按钮事件（修复返回键不好使问题）
+    bindBackButton() {
+        // 移除旧的事件监听
+        const oldBackBtn = document.getElementById('practiceBackBtn');
+        if (oldBackBtn) {
+            oldBackBtn.removeEventListener('click', this.reset.bind(this));
+            oldBackBtn.addEventListener('click', () => {
+                console.log('返回按钮点击');
+                this.reset();
+            });
         }
     },
 
+    // 绑定游戏操作事件
     bindGameEvents() {
         // 摸牌按钮
         document.getElementById('drawCardBtn').addEventListener('click', () => {
@@ -192,7 +251,9 @@ const PracticeMode = {
             }
             
             const drawnCards = selfPlayer.drawCards(2);
-            DOM.updateHandCards(selfPlayer);
+            if (typeof DOM !== 'undefined') {
+                DOM.updateHandCards(selfPlayer);
+            }
             Game.addLog(`你摸了${drawnCards.length}张牌：${drawnCards.map(c => c.name).join('、')}`);
         });
         
@@ -206,11 +267,13 @@ const PracticeMode = {
             }
             
             selfPlayer.endTurn();
-            DOM.updateHandCards(selfPlayer);
-            DOM.updatePlayerList();
+            if (typeof DOM !== 'undefined') {
+                DOM.updateHandCards(selfPlayer);
+                DOM.updatePlayerList();
+            }
         });
         
-        // 手牌点击事件（出牌）
+        // 手牌点击事件
         document.getElementById('handCardsList').addEventListener('click', (e) => {
             const cardItem = e.target.closest('.card-item');
             if (!cardItem) return;
@@ -235,14 +298,14 @@ const PracticeMode = {
             
             const playSuccess = selfPlayer.playCard(card, targetPlayer);
             
-            if (playSuccess) {
+            if (playSuccess && typeof DOM !== 'undefined') {
                 DOM.updateHandCards(selfPlayer);
                 DOM.updatePlayerList();
                 targetSelect.value = '';
             }
         });
         
-        // 目标玩家选择框事件
+        // 目标选择事件
         document.getElementById('targetPlayerSelect').addEventListener('change', (e) => {
             const targetId = e.target.value;
             const target = Game.players.find(p => p.id === targetId);
@@ -255,17 +318,32 @@ const PracticeMode = {
         });
     },
 
+    // 重置练习模式（修复返回功能）
     reset() {
+        console.log('执行重置操作');
         this.config.isStarted = false;
         
-        document.getElementById('gameLog').innerHTML = '';
-        document.getElementById('handCardsList').innerHTML = '';
-        document.getElementById('targetPlayerSelect').innerHTML = '<option value="">选择目标玩家</option>';
+        // 清空游戏数据
+        const gameLog = document.getElementById('gameLog');
+        const handCardsList = document.getElementById('handCardsList');
+        const targetPlayerSelect = document.getElementById('targetPlayerSelect');
         
-        document.querySelectorAll('.page').forEach(page => {
+        if (gameLog) gameLog.innerHTML = '';
+        if (handCardsList) handCardsList.innerHTML = '';
+        if (targetPlayerSelect) targetPlayerSelect.innerHTML = '<option value="">选择目标玩家</option>';
+        
+        // 显示模式选择页
+        const allPages = document.querySelectorAll('.page');
+        allPages.forEach(page => {
+            page.style.display = 'none';
             page.classList.remove('active');
         });
-        document.getElementById('modePage').classList.add('active');
+        
+        const modePage = document.getElementById('modePage');
+        if (modePage) {
+            modePage.style.display = 'block';
+            modePage.classList.add('active');
+        }
         
         Game.addLog('练习模式已重置，请重新选择模式开始游戏');
     },
@@ -281,4 +359,5 @@ const PracticeMode = {
     }
 };
 
+// 全局暴露
 window.PracticeMode = PracticeMode;
